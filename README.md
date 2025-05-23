@@ -36,9 +36,9 @@ This base  is a automated whatsapp bot base developed by <a href="https://github
 
 ## ```Connect With Me```
 <p align="center">
-<a href="https://wa.me/918130784851"><img src="https://img.shields.io/badge/Contact NEXUS-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" />
-<a href="https://chat.whatsapp.com/KdCiUuENgOFEYJMHV3jZNj"><img src="https://img.shields.io/badge/Join Official GC-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" />
-<a href="https://youtube.com/channel/UCRD5uB6-PEvolzFUyFGeJpg"><img src="https://img.shields.io/badge/Subscribe NEXUS-ff0000?style=for-the-badge&logo=youtube&logoColor=ff000000&link=https://youtube.com/@Nexus_1k" /><br>
+<a href="https://wa.me/254756182478"><img src="https://img.shields.io/badge/Contact NEXUS-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" />
+<a href="https://chat.whatsapp.com/BPyIptm3ZH68y4pSPrLMyq"><img src="https://img.shields.io/badge/Join Official GC-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" />
+<a href="https://youtube.com/channel/UCRD5uB6-PEvolzFUyFGeJpg"><img src="https://img.shields.io/badge/Subscribe YouTube-ff0000?style=for-the-badge&logo=youtube&logoColor=ff000000&link=https://youtube.com/@giddynokia" /><br>
 </p>
 
 
