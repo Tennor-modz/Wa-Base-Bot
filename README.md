@@ -1,8 +1,8 @@
 
 <h1 align="center">ꪶ𝐒𝐈𝐌𝐏𝐋𝐄-𝐖𝐀-𝐁𝐚𝐬𝐞  𝐛𝐨𝐭ꫂ<br></h1>
 <p align="center">
-<img src="https://i.ibb.co/39rrkttP/455944eb4d07a365.jpg" alt="img" width="540" height="280" />
-</p>
+<a href="https://github.com/Tennor-modz"><img title="Author" src="https://i.ibb.co/39rrkttP/455944eb4d07a365.jpg?style=for-the-badge&logo=github"></a>
+
 
 <p align="center">
 This base  is a automated whatsapp bot base developed by <a href="https://github.com/Tennor-modz" target="_blank">Giddy Tennor</a> using <a href="https://github.com/adiwajshing/Baileys" target="_blank">Baileys</a> and <a href="https://github.com/nodejs" target="_blank">Nodejs</a>. Dont forget to give a star bro.
