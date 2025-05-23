@@ -1,7 +1,7 @@
 
 <h1 align="center">ꪶ𝐒𝐈𝐌𝐏𝐋𝐄-𝐖𝐀-𝐁𝐚𝐬𝐞  𝐛𝐨𝐭ꫂ<br></h1>
 <p align="center">
-<img src="https://i.ibb.co/39rrkttP/455944eb4d07a365.jpg" alt="animated" width="540" height="280" />
+<img src="https://i.ibb.co/39rrkttP/455944eb4d07a365.jpg" alt="img" width="540" height="280" />
 </p>
 
 <p align="center">
