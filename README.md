@@ -1,35 +1,33 @@
 
-<h1 align="center">ꪶ𝙓𝘽𝙊𝙏-𝙈𝘿𝟐ꫂ<br></h1>
+<h1 align="center">ꪶ𝐒𝐈𝐌𝐏𝐋𝐄-𝐖𝐀-𝐁𝐚𝐬𝐞  𝐛𝐨𝐭ꫂ<br></h1>
 <p align="center">
-<img src="https://media.tenor.com/dJ0Wknn8mEMAAAAM/nexus.gif" alt="animated" width="540" height="280" />
+<img src="https://i.ibb.co/39rrkttP/455944eb4d07a365.jpg" alt="animated" width="540" height="280" />
 </p>
 
 <p align="center">
-X Bot Multi Device is a automated whatsapp bot developed by <a href="https://github.com/NEXUSAT12" target="_blank">Nexus</a> using <a href="https://github.com/adiwajshing/Baileys" target="_blank">Baileys</a> and <a href="https://github.com/nodejs" target="_blank">Nodejs</a>. Dont forget to give a star bro.
+This base  is a automated whatsapp bot base developed by <a href="https://github.com/Tennor-modz" target="_blank">Giddy Tennor</a> using <a href="https://github.com/adiwajshing/Baileys" target="_blank">Baileys</a> and <a href="https://github.com/nodejs" target="_blank">Nodejs</a>. Dont forget to give a star bro.
 </p>
 
-<p align="center">
-Big thanks❤️ to <a href="https://github.com/RaySenpai69" target="_blank">Ray Senpai</a> for huge contribution, Check out his bot <a href="https://github.com/RaySenpai69/Nezuko" target="_blank">Nezuko</a>
-</p>
+
 
 ---
 
 <p align="center">
-<a href="https://youtube.com/@Nexus_1k"><img title="Size" src="https://img.shields.io/badge/Tutorial-Video-green"></a>
+<a href="https://youtube.com/@giddynokia"><img title="Size" src="https://img.shields.io/badge/Tutorial-Video-green"></a>
 </p>
 
 ------
 
 # ```Bot Info```
 <p align="center">
-<a href="https://github.com/DEVILL-MASCOT/followers"><img title="Followers" src="https://img.shields.io/github/followers/DEVILL-MASCOT?color=red&style=flat-square"></a>
-<a href="https://github.com/DEVILL-MASCOT/XBOT-MD2/stargazers/"><img title="Stars" src="https://img.shields.io/github/stars/DEVILL-MASCOT/XBOT-MD2 ?color=blue&style=flat-square"></a>
-<a href="https://github.com/DEVILL-MASCOT/XBOT-MD2/network/members"><img title="Forks" src="https://img.shields.io/github/forks/DEVILL-MASCOT/XBOT-MD2 ?color=red&style=flat-square"></a>
-<a href="https://github.com/DEVILL-MASCOT/XBOT-MD2/watchers"><img title="Watching" src="https://img.shields.io/github/watchers/DEVILL-MASCOT/XBOT-MD2 ?label=Watchers&color=blue&style=flat-square"></a>
-<a href="https://github.com/DEVILL-MASCOT/XBOT-MD2/"><img title="Open Source" src="https://img.shields.io/badge/Author-X%20Bot%20Inc.-red?v=103"></a>
-<a href="https://github.com/DEVILL-MASCOT/XBOT-MD2/"><img title="Size" src="https://img.shields.io/github/repo-size/DEVILL-MASCOT/XBOT-MD2 ?style=flat-square&color=green"></a>
-<a href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FDEVILL-MASCOT%2FXBOT-MD2&count_bg=%2379C83D&title_bg=%23555555&icon=probot.svg&icon_color=%2300FF6D&title=hits&edge_flat=false"/></a>
-<a href="https://github.com/DEVILL-MASCOT/XBOT-MD2/graphs/commit-activity"><img height="20" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg"></a>&nbsp;&nbsp;
+<a href="https://github.com/Tennor-modz/followers"><img title="Followers" src="https://img.shields.io/github/followers/Tennor-modz?color=red&style=flat-square"></a>
+<a href="https://github.com/Tennor-modz/Wa-Base-Bot/stargazers/"><img title="Stars" src="https://img.shields.io/github/stars/Tennor-modz/Wa-Base-Bot?color=blue&style=flat-square"></a>
+<a href="https://github.com/Tennor-modz/Wa-Base-Bot/network/members"><img title="Forks" src="https://img.shields.io/github/forks/Tennor-modz/Wa-Base-Bot?color=red&style=flat-square"></a>
+<a href="https://github.com/Tennor-modz/Wa-Base-Bot/watchers"><img title="Watching" src="https://img.shields.io/github/watchers/Tennor-modz/Wa-Base-Bot?label=Watchers&color=blue&style=flat-square"></a>
+<a href="https://github.com/Tennor-modz/Wa-Base-Bot/"><img title="Open Source" src="https://img.shields.io/badge/Author-X%20Bot%20Inc.-red?v=103"></a>
+<a href="https://github.com/Tennor-modz/Wa-Base-Bot/"><img title="Size" src="https://img.shields.io/github/repo-size/Tennor-modz/Wa-Base-Bot ?style=flat-square&color=green"></a>
+<a href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FTennor-modz%2FXBOT-MD2&count_bg=%2379C83D&title_bg=%23555555&icon=probot.svg&icon_color=%2300FF6D&title=hits&edge_flat=false"/></a>
+<a href="https://github.com/Tennor-modz/Wa-Base-Bot/graphs/commit-activity"><img height="20" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg"></a>&nbsp;&nbsp;
 </p>
 <p align='center'>
     </p>
