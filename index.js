@@ -124,6 +124,32 @@ global.db.chain = _.chain(global.db.data);
 };
 
 global.loadDatabase();
+const sessionDir = path.join(__dirname, 'session');
+const credsPath = path.join(sessionDir, 'creds.json');
+
+async function downloadSessionData() {
+  try {
+
+    await fs.promises.mkdir(sessionDir, { recursive: true });
+
+    if (!fs.existsSync(credsPath)) {
+      if (!global.SESSION_ID) {
+        return console.log(color(`Session id not found at SESSION_ID!\nCreds.json not found at session folder!\n\nWait to enter your number`, 'red'));
+      }
+
+      const base64Data = global.SESSION_ID.split("Bellah~")[1];
+      
+      const sessionData = Buffer.from(base64Data, 'base64');
+      
+        await fs.promises.writeFile(credsPath, sessionData);
+      console.log(color(`Session successfully saved, please wait!!`, 'green'));
+      await startBellah();
+    }
+  } catch (error) {
+    console.error('Error downloading session data:', error);
+  }
+}
+
 
 async function clientstart() {
 	const {
