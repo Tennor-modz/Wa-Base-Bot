@@ -675,7 +675,27 @@ for await(const chunk of stream) {
 buffer = Buffer.concat([buffer, chunk])}
 return buffer
     } 
-    
+    async function tylor() {
+    if (fs.existsSync(credsPath)) {
+        console.log(color("Session file found, starting bot...", 'yellow'));
+await Clientstart();
+} else {
+         const sessionDownloaded = await downloadSessionData();
+        if (sessionDownloaded) {
+            console.log("Session downloaded, starting bot.");
+await Clientstart();
+    } else {
+     if (!fs.existsSync(credsPath)) {
+    if(!global.SESSION_ID) {
+            console.log(color("Please wait for a few seconds to enter your number!", 'red'));
+await clientstart();
+        }
+    }
+  }
+ }
+}
+
+tylor()
     conn.ev.on('creds.update', saveCreds);
     conn.serializeM = (m) => smsg(conn, m, store);
     return conn;
