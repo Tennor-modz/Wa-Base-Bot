@@ -76,8 +76,8 @@ https://github.com/clhuang/heroku-buildpack-webp-binaries.git
 * Any text editor
 ## `Clone Repo & Installation dependencies`
 ```bash
-git clone https://github.com/NEXUSAT12/XBOT-MD2.git
-cd CheemsBot-MD6
+git clone https://github.com/Tennor-modz/Wa-Base-Bot.git
+cd Wa-Base-Bot
 
 npm start
 ```
