@@ -93,7 +93,7 @@ pkg install nodejs -y
 pkg install ffmpeg -y 
 pkg install wget
 pkg install imagemagick -y
-git clone https://github.com/NEXUSAT12/XBOT-MD2
+git clone https://github.com/Tennor-modz/Wa-Base-Bot 
 cd CheemsBot-MD
 npm start
 ```
@@ -105,7 +105,7 @@ apt apt install ffmpeg
 apt apt install libwebp 
 apt apt install imagrmagick
 apt install bash
-git clone https://github.com/NEXUSAT12/XBOT-MD2
+git clone https://github.com/Tennor-modz/Wa-Base-Bot 
 cd CheemsBot-MD6
 npm start
 ```
