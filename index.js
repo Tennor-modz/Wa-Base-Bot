@@ -1,17 +1,7 @@
 /*
 
-#Creator
-github : https://github.com/Tennor-modz 
-youtube : https://youtube.com/@GiddyNokia
-rest api : https://
-
-#Bot
-github : null
-name : Hunter V14
-version : free
-Script button 
-buy no enc:254756182478
-
+📝 | Created By Giddy Tennor
+🖥️ | Base Original By Giddy Tennor 
 */
 
 console.clear();
