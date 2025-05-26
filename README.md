@@ -50,7 +50,7 @@ Scan qr code from the above button, u can pay through GooglePay, Paytm, PhonePe 
 
 - [`BOT HOSTING NET`](https://bot-hosting.net/) 
 
-
+- [`KATABUMB HOSTING NET`](https://katabump.com/en/) 
 
 
 # Install Manually 👇
