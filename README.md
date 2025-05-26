@@ -46,26 +46,12 @@ This base  is a automated whatsapp bot base developed by <a href="https://github
 Scan qr code from the above button, u can pay through GooglePay, Paytm, PhonePe and FamPay.
 </p>
 
-## ```Bot Support Groups```
+## ```Run-Sites```
 
-- [`1st GC`](https://chat.whatsapp.com/KdCiUuENgOFEYJMHV3jZNj) 
-
-# Setup For Deployment 👇
-
-- FORK THE REPOSITORY [Here](https://github.com/Tennor-modz/Wa-Base-Bot/fork)
-
-## `Scan QR Code For Session`
-[![X Bot](https://repl.it/badge/github/quiec/whatsasena)](https://replit.com/@DEVILL-MASCOT/XBOT-QR-GENERATOR?output%20only=1&lite=1#index.js)
-
- ` BUILDPACKS`
-
-```
-https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest
-https://github.com/clhuang/heroku-buildpack-webp-binaries.git
-```
+- [`BOT HOSTING NET`](https://bot-hosting.net/) 
 
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Tennor-modz/Wa-Base-Bot/)
+
 
 # Install Manually 👇
 ## `Requirements`
