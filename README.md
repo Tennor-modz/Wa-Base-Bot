@@ -44,6 +44,7 @@ This base  is a automated whatsapp bot base developed by <a href="https://github
 
 - [`KATABUMB HOSTING NET`](https://katabump.com/en/) 
 
+- [`PYLEX HOSTING NET`](https://wispbyte.com/) 
 
 # Install Manually 👇
 ## `Requirements`
