@@ -50,6 +50,8 @@ Scan qr code from the above button, u can pay through GooglePay, Paytm, PhonePe 
 
 - [`BOT HOSTING NET`](https://bot-hosting.net/) 
 
+- [`DAKI HOSTING NET`](https://dash.daki.cc/) 
+
 - [`KATABUMB HOSTING NET`](https://katabump.com/en/) 
 
 
