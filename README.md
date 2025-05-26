@@ -41,11 +41,6 @@ This base  is a automated whatsapp bot base developed by <a href="https://github
 <a href="https://youtube.com/channel/UCRD5uB6-PEvolzFUyFGeJpg"><img src="https://img.shields.io/badge/Subscribe YouTube-ff0000?style=for-the-badge&logo=youtube&logoColor=ff000000&link=https://youtube.com/@giddynokia" /><br>
 </p>
 
-
-<p align="left">
-Scan qr code from the above button, u can pay through GooglePay, Paytm, PhonePe and FamPay.
-</p>
-
 ## ```Run-Sites```
 
 - [`BOT HOSTING NET`](https://bot-hosting.net/) 
