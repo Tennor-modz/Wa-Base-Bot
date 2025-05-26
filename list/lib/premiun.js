@@ -2,7 +2,12 @@ const fs = require("fs");
 const toMs = require("ms");
 
 const premium = fs.readFileSync('./list/Database/premium.json')
-
+/**
+ * Add premium user.
+ * @param {String} userId
+ * @param {String} expired
+ * @param {Object} _dir
+ */
 const addPremiumUser = (userId, expired, _dir) => {
 	const cekUser = premium.find((user) => user.id == userId);
 	if (cekUser) {
@@ -14,6 +19,12 @@ const addPremiumUser = (userId, expired, _dir) => {
 	fs.writeFileSync("./list/Database/premium.json", JSON.stringify(_dir));
 };
 
+/**
+ * Get premium user position.
+ * @param {String} userId
+ * @param {Object} _dir
+ * @returns {Number}
+ */
 const getPremiumPosition = (userId, _dir) => {
 	let position = null;
 	Object.keys(_dir).forEach((i) => {
@@ -26,6 +37,12 @@ const getPremiumPosition = (userId, _dir) => {
 	}
 };
 
+/**
+ * Get premium user expire.
+ * @param {String} userId
+ * @param {Object} _dir
+ * @returns {Number}
+ */
 const getPremiumExpired = (userId, _dir) => {
 	let position = null;
 	Object.keys(_dir).forEach((i) => {
@@ -38,6 +55,12 @@ const getPremiumExpired = (userId, _dir) => {
 	}
 };
 
+/**
+ * Check user is premium.
+ * @param {String} userId
+ * @param {Object} _dir
+ * @returns {Boolean}
+ */
 const checkPremiumUser = (userId, _dir) => {
 	let status = false;
 	Object.keys(_dir).forEach((i) => {
@@ -48,7 +71,11 @@ const checkPremiumUser = (userId, _dir) => {
 	return status;
 };
 
-const expiredPremiumCheck = (bot, msg, _dir) => {
+/**
+ * Constantly checking premium.
+ * @param {Object} _dir
+ */
+const expiredPremiumCheck = (ryokun, msg, _dir) => {
 	setInterval(() => {
 		let position = null;
 		Object.keys(_dir).forEach((i) => {
@@ -61,12 +88,17 @@ const expiredPremiumCheck = (bot, msg, _dir) => {
 			console.log(`Premium expired: ${_dir[position].id}`);
 			_dir.splice(position, 1);
 			fs.writeFileSync("./list/Database/premium.json", JSON.stringify(_dir));
-			idny ? bot.sendMessage(idny, { text: "Your premium has run out, please buy again." }) : "";
+			idny ? ryokun.sendMessage(idny, { text: "your premium has expired." }) : "";
 			idny = false;
 		}
 	}, 1000);
 };
 
+/**
+ * Get all premium user ID.
+ * @param {Object} _dir
+ * @returns {String[]}
+ */
 const getAllPremiumUser = (_dir) => {
 	const array = [];
 	Object.keys(_dir).forEach((i) => {
