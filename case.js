@@ -423,6 +423,7 @@ ${greeting} 👋
                 }
                 break;
             }
+            // ================= VIDEO =================
 case 'video': {
     try {
         if (!text) return reply('❌ What video do you want to download?');
@@ -582,7 +583,7 @@ case 'public': {
     break;
 }
 
-// Play-Doc  command
+            // ================Play doc=================
 case 'playdoc': {
     try {
         const tempDir = path.join(__dirname, "temp");
@@ -654,6 +655,7 @@ case 'playdoc': {
     break;
 }
 
+            // ================= ANTILINK =================
 case 'antilink': {
     try {
         if (!isGroup) return reply("❌ This command only works in groups!");
@@ -705,6 +707,7 @@ case 'antilink': {
     }
     break;
 }
+            // ================= ADD =================
 case 'add': {
     if (!isGroup) return reply(" this command is only for groups");
     if (!isAdmin && !isBotAdmins && !isOwner) return reply("action restricted for admin and owner only");
@@ -775,6 +778,7 @@ case 'hidetag': {
     break;
 }
 
+            // ================= TAGALL =================
 case 'tagall':
 case 'everyone':
     if (!isGroup) {
@@ -795,7 +799,7 @@ case 'everyone':
     });
 break;
 
-
+            // ================= KICK =================
 case 'kick':
 case 'remove': {
     if (!isGroup) return reply("❌ This command can only be used in groups!");
@@ -849,6 +853,7 @@ case 'remove': {
     break;
 }
 
+            // ================= PROMOTE =================
 case 'promote': {
     try {
         if (!m.isGroup) return m.reply("❌ This command only works in groups!");
@@ -897,7 +902,7 @@ case 'promote': {
 }
 
 
-
+            // ================= DEMOTE =================
 case 'demote': {
     try {
         if (!m.isGroup) return reply("❌ This command only works in groups!");
@@ -946,6 +951,7 @@ case 'demote': {
     break;
 }
 
+            // ================= COPILOT =================
 case 'copilot': {
     try {
         if (!args[0]) return reply('⚠️ Please provide a query!\n\nExample:\n.copilot what is JavaScript?');
@@ -967,8 +973,8 @@ case 'copilot': {
     break;
 }
 
-
-            // ================= OWNER ONLY COMMANDS =================
+            // ================= END OF CASES BRO=================
+            // ================= BASIC COMMANDS =================
             default: {
                 if (!isOwner) break; // Only owner can use eval/exec
 
