@@ -133,6 +133,90 @@ if (isGroup && global.antilink && global.antilink[from]?.enabled) {
         }
     }
 }
+
+// --- 🚫 ANTI-TAG AUTO CHECK ---
+if (isGroup && global.antitag && global.antitag[from]?.enabled) {
+    const settings = global.antitag[from];
+    const groupMeta = await trashcore.groupMetadata(from);
+    const groupAdmins = groupMeta.participants.filter(p => p.admin).map(p => p.id);
+    const botNumber = trashcore.user.id.split(":")[0] + "@s.whatsapp.net";
+    const isBotAdmin = groupAdmins.includes(botNumber);
+    const isSenderAdmin = groupAdmins.includes(m.sender);
+
+    // Detect if message contains a mention
+    const mentionedUsers = m.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+
+    if (mentionedUsers.length > 0) {
+        if (!isSenderAdmin && isBotAdmin) {
+            try {
+                // 🧹 Delete message
+                await trashcore.sendMessage(from, { delete: m.key });
+
+                // ⚠️ Notify group
+                await trashcore.sendMessage(from, {
+                    text: `🚫 *Yooh Tagging others is not allowed!*\nUser:Action: ${settings.mode.toUpperCase()}`,
+                    mentions: [m.sender],
+                });
+
+                // 🚷 If mode is "kick"
+                if (settings.mode === "kick") {
+                    await trashcore.groupParticipantsUpdate(from, [m.sender], "remove");
+                }
+            } catch (err) {
+                console.error("Anti-Tag Enforcement Error:", err);
+            }
+        }
+    }
+}
+
+// 🚫 AntiBadWord with Strike System
+if (isGroup && global.antibadword?.[from]?.enabled) {
+  const badwords = global.antibadword[from].words || [];
+  const textMsg = (m.body || "").toLowerCase();
+  const found = badwords.find(w => textMsg.includes(w));
+
+  if (found) {
+    const botNumber = trashcore.user.id.split(":")[0] + "@s.whatsapp.net";
+    const groupMetadata = await trashcore.groupMetadata(from);
+    const groupAdmins = groupMetadata.participants.filter(p => p.admin).map(p => p.id);
+    const isBotAdmin = groupAdmins.includes(botNumber);
+    const isSenderAdmin = groupAdmins.includes(m.sender);
+
+    if (!isSenderAdmin) {
+      if (isBotAdmin) {
+        await trashcore.sendMessage(from, { delete: m.key });
+      }
+
+      global.antibadword[from].warnings[m.sender] =
+        (global.antibadword[from].warnings[m.sender] || 0) + 1;
+
+      const warns = global.antibadword[from].warnings[m.sender];
+      const remaining = 3 - warns;
+
+      if (warns < 3) {
+        await trashcore.sendMessage(from, {
+          text: `⚠️ @${m.sender.split('@')[0]}, bad word detected!\nWord: *${found}*\nWarning: *${warns}/3*\n${remaining} more and you'll be kicked!`,
+          mentions: [m.sender],
+        });
+      } else {
+        if (isBotAdmin) {
+          await trashcore.sendMessage(from, {
+            text: `🚫 @${m.sender.split('@')[0]} has been kicked for repeated bad words.`,
+            mentions: [m.sender],
+          });
+          await trashcore.groupParticipantsUpdate(from, [m.sender], "remove");
+          delete global.antibadword[from].warnings[m.sender];
+        } else {
+          await trashcore.sendMessage(from, {
+            text: `🚨 @${m.sender.split('@')[0]} reached 3 warnings, but I need admin rights to kick!`,
+            mentions: [m.sender],
+          });
+        }
+      }
+    }
+  }
+}
+
 if (!trashcore.isPublic && !isOwner) {
     return; // ignore all messages from non-owner when in private mode
 }
@@ -187,8 +271,17 @@ Uptime: ${formatUptime(process.uptime())}
 • promote 
 • demote
 • antilink
+• antitag
+• antipromote 
+• antidemote 
+• antibadword 
 • tagall
 • hidetag
+
+📍 CONVERSION
+• toaudio 
+• tovoicenote 
+• toimage
 
 👤 BASIC
 • copilot
@@ -288,6 +381,7 @@ ${greeting} 👋
                 }
                 break;
             }
+
 
             // ================= SAVE STATUS =================
             case 'save': {
@@ -423,7 +517,6 @@ ${greeting} 👋
                 }
                 break;
             }
-            // ================= VIDEO =================
 case 'video': {
     try {
         if (!text) return reply('❌ What video do you want to download?');
@@ -566,6 +659,161 @@ case 'video': {
                 }
                 break;
             }
+// ================= TO AUDIO  =================
+case 'toaudio': {
+    try {
+        const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+        const ffmpeg = require('fluent-ffmpeg');
+        const { writeFileSync, unlinkSync } = require('fs');
+        const { tmpdir } = require('os');
+        const path = require('path');
+
+        // ✅ Pick source message
+        const quoted = m.quoted ? m.quoted : m;
+        const msg = quoted.msg || quoted.message?.videoMessage || quoted.message?.audioMessage;
+
+        if (!msg) return reply("🎧 Reply to a *video* or *audio* to convert it to audio!");
+
+        // ✅ Get MIME type
+        const mime = msg.mimetype || quoted.mimetype || '';
+        if (!/video|audio/.test(mime)) return reply("⚠️ Only works on *video* or *audio* messages!");
+
+        reply("🎶 Converting to audio...");
+
+        // ✅ Download media
+        const messageType = mime.split("/")[0];
+        const stream = await downloadContentFromMessage(msg, messageType);
+
+        let buffer = Buffer.from([]);
+        for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+
+        // ✅ Temporary paths
+        const inputPath = path.join(tmpdir(), `input_${Date.now()}.mp4`);
+        const outputPath = path.join(tmpdir(), `output_${Date.now()}.mp3`);
+        writeFileSync(inputPath, buffer);
+
+        // ✅ Convert using ffmpeg
+        await new Promise((resolve, reject) => {
+            ffmpeg(inputPath)
+                .toFormat('mp3')
+                .on('end', resolve)
+                .on('error', reject)
+                .save(outputPath);
+        });
+
+        // ✅ Send converted audio
+        const audioBuffer = fs.readFileSync(outputPath);
+        await trashcore.sendMessage(from, { audio: audioBuffer, mimetype: 'audio/mpeg', ptt: false }, { quoted: m });
+
+        // ✅ Cleanup
+        unlinkSync(inputPath);
+        unlinkSync(outputPath);
+
+        reply("✅ Conversion complete!");
+    } catch (err) {
+        console.error("❌ toaudio error:", err);
+        reply("💥 Failed to convert media to audio. Ensure it's a valid video/audio file.");
+    }
+    break;
+}
+
+// ================= TO VOICE NOTE  =================
+case 'tovoicenote': {
+    try {
+        const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+        const ffmpeg = require('fluent-ffmpeg');
+        const fs = require('fs');
+        const path = require('path');
+        const { tmpdir } = require('os');
+
+        // ✅ Determine source message
+        const quoted = m.quoted ? m.quoted : m;
+        const msg = quoted.msg || quoted.message?.videoMessage || quoted.message?.audioMessage;
+
+        if (!msg) return reply("🎧 Reply to a *video* or *audio* to convert it to a voice note!");
+
+        const mime = msg.mimetype || quoted.mimetype || '';
+        if (!/video|audio/.test(mime)) return m.reply("⚠️ Only works on *video* or *audio* messages!");
+
+        reply("🔊 Converting to voice note...");
+
+        // ✅ Download media
+        const messageType = mime.split("/")[0];
+        const stream = await downloadContentFromMessage(msg, messageType);
+        let buffer = Buffer.from([]);
+        for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+
+        // ✅ Temp files
+        const inputPath = path.join(tmpdir(), `input_${Date.now()}.mp4`);
+        const outputPath = path.join(tmpdir(), `output_${Date.now()}.ogg`);
+        fs.writeFileSync(inputPath, buffer);
+
+        // ✅ Convert to PTT using ffmpeg (Opus in OGG)
+        await new Promise((resolve, reject) => {
+            ffmpeg(inputPath)
+                .inputOptions('-t 59') // optional: limit duration to 59s
+                .toFormat('opus')
+                .outputOptions(['-c:a libopus', '-b:a 64k'])
+                .on('end', resolve)
+                .on('error', reject)
+                .save(outputPath);
+        });
+
+        // ✅ Send voice note
+        const audioBuffer = fs.readFileSync(outputPath);
+        await trashcore.sendMessage(from, { audio: audioBuffer, mimetype: 'audio/ogg', ptt: true }, { quoted: m });
+
+        // ✅ Cleanup
+        fs.unlinkSync(inputPath);
+        fs.unlinkSync(outputPath);
+
+        reply("✅ Voice note sent!");
+    } catch (err) {
+        console.error("❌ tovoicenote error:", err);
+        m.reply("💥 Failed to convert media to voice note. Make sure it is a valid video/audio file.");
+    }
+    break;
+}
+// ================= TO IMAGE =================
+case 'toimage': {
+    try {
+        const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+        const fs = require('fs');
+        const path = require('path');
+        const { tmpdir } = require('os');
+        const sharp = require('sharp');
+
+        // ✅ Determine source message
+        const quoted = m.quoted ? m.quoted : m;
+        const msg = quoted.msg || quoted.message?.stickerMessage;
+        if (!msg || !msg.mimetype?.includes('webp')) {
+            return reply("⚠️ Reply to a *sticker* to convert it to an image!");
+        }
+
+        m.reply("🖼️ Converting sticker to image...");
+
+        // ✅ Download sticker
+        const stream = await downloadContentFromMessage(msg, 'sticker');
+        let buffer = Buffer.from([]);
+        for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+
+        // ✅ Convert WebP to PNG using sharp
+        const outputPath = path.join(tmpdir(), `sticker_${Date.now()}.png`);
+        await sharp(buffer).png().toFile(outputPath);
+
+        // ✅ Send converted image
+        const imageBuffer = fs.readFileSync(outputPath);
+        await trashcore.sendMessage(from, { image: imageBuffer }, { quoted: m });
+
+        // ✅ Cleanup
+        fs.unlinkSync(outputPath);
+        reply("✅ Sticker converted to image!");
+    } catch (err) {
+        console.error("❌ toimage error:", err);
+        reply("💥 Failed to convert sticker to image.");
+    }
+    break;
+}
 
 // ================= PRIVATE / SELF COMMAND =================
 case 'private':
@@ -583,7 +831,7 @@ case 'public': {
     break;
 }
 
-            // ================Play doc=================
+// Play-Doc  command
 case 'playdoc': {
     try {
         const tempDir = path.join(__dirname, "temp");
@@ -655,11 +903,10 @@ case 'playdoc': {
     break;
 }
 
-            // ================= ANTILINK =================
 case 'antilink': {
     try {
         if (!isGroup) return reply("❌ This command only works in groups!");
-        if (!isAdmin && !isOwner) return reply("⚠️ Only admins or the owner can use this command!");
+        if (!isOwner) return reply("⚠️ Only admins or the owner can use this command!");
     if (!isBotAdmins) return reply("🚫 I need admin privileges to remove members!");
 
         global.antilink = global.antilink || {};
@@ -707,7 +954,251 @@ case 'antilink': {
     }
     break;
 }
-            // ================= ADD =================
+
+// ================= ANTI TAG=================
+case 'antitag': {
+    try {
+        if (!isGroup) return reply("❌ This command only works in groups!");
+        if (!isOwner) return reply("⚠️ Only admins or the owner can use this command!");
+        if (!isBotAdmins) return reply("🚫 I need admin privileges to manage group settings!");
+
+        global.antitag = global.antitag || {};
+        const chatId = from;
+
+        // Initialize if not existing
+        if (!global.antitag[chatId]) {
+            global.antitag[chatId] = { enabled: false, mode: "delete" };
+        }
+
+        const option = args[0]?.toLowerCase();
+
+        if (option === "on") {
+            global.antitag[chatId].enabled = true;
+            return reply(`✅ *AntiTag enabled!*\nMode: ${global.antitag[chatId].mode.toUpperCase()}`);
+        }
+
+        if (option === "off") {
+            global.antitag[chatId].enabled = false;
+            return reply("❎ AntiTag disabled!");
+        }
+
+        if (option === "mode") {
+            const modeType = args[1]?.toLowerCase();
+            if (!modeType || !["delete", "kick"].includes(modeType))
+                return reply("⚙️ Usage: `.antitag mode delete` or `.antitag mode kick`");
+
+            global.antitag[chatId].mode = modeType;
+            return reply(`🔧 AntiTag mode set to *${modeType.toUpperCase()}*!`);
+        }
+
+        // If no argument is given
+        return reply(
+            `📢 *AntiTag Settings*\n\n` +
+            `• Status: ${global.antitag[chatId].enabled ? "✅ ON" : "❎ OFF"}\n` +
+            `• Mode: ${global.antitag[chatId].mode.toUpperCase()}\n\n` +
+            `🧩 Usage:\n` +
+            `- .antitag on\n` +
+            `- .antitag off\n` +
+            `- .antitag mode delete\n` +
+            `- .antitag mode kick`
+        );
+    } catch (err) {
+        console.error("AntiTag command error:", err);
+        reply("💥 Error while updating AntiTag settings.");
+    }
+    break;
+}
+
+case 'antidemote': {
+    try {
+        if (!isGroup) return reply("❌ This command only works in groups!");
+        if (!isOwner) return reply("⚠️ Only admins or the owner can use this command!");
+        if (!isBotAdmins) return reply("🚫 I need admin privileges to manage group settings!");
+
+        global.antidemote = global.antidemote || {};
+        const chatId = from;
+
+        if (!global.antidemote[chatId]) {
+            global.antidemote[chatId] = { enabled: false, mode: "revert" };
+        }
+
+        const option = args[0]?.toLowerCase();
+
+        if (option === "on") {
+            global.antidemote[chatId].enabled = true;
+            return reply(`✅ *AntiDemote enabled!*\nMode: ${global.antidemote[chatId].mode.toUpperCase()}`);
+        }
+
+        if (option === "off") {
+            global.antidemote[chatId].enabled = false;
+            return reply("❎ AntiDemote disabled!");
+        }
+
+        if (option === "mode") {
+            const modeType = args[1]?.toLowerCase();
+            if (!modeType || !["revert", "kick"].includes(modeType))
+                return reply("⚙️ Usage: `.antidemote mode revert` or `.antidemote mode kick`");
+
+            global.antidemote[chatId].mode = modeType;
+            return reply(`🔧 AntiDemote mode set to *${modeType.toUpperCase()}*!`);
+        }
+
+        // Display settings if no args
+        return reply(
+            `📢 *AntiDemote Settings*\n\n` +
+            `• Status: ${global.antidemote[chatId].enabled ? "✅ ON" : "❎ OFF"}\n` +
+            `• Mode: ${global.antidemote[chatId].mode.toUpperCase()}\n\n` +
+            `🧩 Usage:\n` +
+            `- .antidemote on\n` +
+            `- .antidemote off\n` +
+            `- .antidemote mode revert\n` +
+            `- .antidemote mode kick`
+        );
+    } catch (err) {
+        console.error("AntiDemote command error:", err);
+        reply("💥 Error while updating AntiDemote settings.");
+    }
+    break;
+}
+
+case 'antipromote': {
+    try {
+        if (!isGroup) return reply("❌ This command only works in groups!");
+        if (!isOwner) return reply("⚠️ Only admins or the owner can use this command!");
+        if (!isBotAdmins) return reply("🚫 I need admin privileges to manage group settings!");
+
+        global.antipromote = global.antipromote || {};
+        const chatId = from;
+
+        if (!global.antipromote[chatId]) {
+            global.antipromote[chatId] = { enabled: false, mode: "revert" }; 
+        }
+
+        const option = args[0]?.toLowerCase();
+
+        if (option === "on") {
+            global.antipromote[chatId].enabled = true;
+            return reply(`✅ *AntiPromote enabled!*\nMode: ${global.antipromote[chatId].mode.toUpperCase()}`);
+        }
+
+        if (option === "off") {
+            global.antipromote[chatId].enabled = false;
+            return reply("❎ AntiPromote disabled!");
+        }
+
+        if (option === "mode") {
+            const modeType = args[1]?.toLowerCase();
+            if (!modeType || !["revert", "kick"].includes(modeType))
+                return reply("⚙️ Usage: `.antipromote mode revert` or `.antipromote mode kick`");
+
+            global.antipromote[chatId].mode = modeType;
+            return reply(`🔧 AntiPromote mode set to *${modeType.toUpperCase()}*!`);
+        }
+
+        // Display settings if no args
+        return reply(
+            `📢 *AntiPromote Settings*\n\n` +
+            `• Status: ${global.antipromote[chatId].enabled ? "✅ ON" : "❎ OFF"}\n` +
+            `• Mode: ${global.antipromote[chatId].mode.toUpperCase()}\n\n` +
+            `🧩 Usage:\n` +
+            `- .antipromote on\n` +
+            `- .antipromote off\n` +
+            `- .antipromote mode revert\n` +
+            `- .antipromote mode kick`
+        );
+    } catch (err) {
+        console.error("AntiPromote command error:", err);
+        reply("💥 Error while updating AntiPromote settings.");
+    }
+    break;
+}
+
+case 'antibadword': {
+  try {
+    if (!isGroup) return reply("❌ This command only works in groups!");
+    if (!isOwner) return reply("⚠️ Only admins or the owner can use this command!");
+
+    global.antibadword = global.antibadword || {};
+    const chatId = from;
+
+    if (!global.antibadword[chatId]) {
+      global.antibadword[chatId] = {
+        enabled: false,
+        words: [],
+        warnings: {} // { userJid: count }
+      };
+    }
+
+    const option = args[0]?.toLowerCase();
+
+    // Enable AntiBadWord
+    if (option === "on") {
+      global.antibadword[chatId].enabled = true;
+      return reply("✅ *AntiBadWord enabled!* Bad words will now be deleted and warned.");
+    }
+
+    // Disable AntiBadWord
+    if (option === "off") {
+      global.antibadword[chatId].enabled = false;
+      return reply("❎ AntiBadWord disabled!");
+    }
+
+    // Add bad word
+    if (option === "add") {
+      const word = args.slice(1).join(" ").toLowerCase();
+      if (!word) return reply("⚙️ Usage: `.antibadword add <word>`");
+      if (global.antibadword[chatId].words.includes(word))
+        return reply("⚠️ That word is already in the list.");
+
+      global.antibadword[chatId].words.push(word);
+      return reply(`✅ Added bad word: *${word}*`);
+    }
+
+    // Remove bad word
+    if (option === "remove") {
+      const word = args.slice(1).join(" ").toLowerCase();
+      if (!word) return reply("⚙️ Usage: `.antibadword remove <word>`");
+      const index = global.antibadword[chatId].words.indexOf(word);
+      if (index === -1) return reply("❌ That word is not in the list.");
+      global.antibadword[chatId].words.splice(index, 1);
+      return reply(`🗑️ Removed bad word: *${word}*`);
+    }
+
+    // List bad words
+    if (option === "list") {
+      const words = global.antibadword[chatId].words;
+      return reply(
+        `📜 *AntiBadWord List*\n` +
+        `Status: ${global.antibadword[chatId].enabled ? "✅ ON" : "❎ OFF"}\n\n` +
+        (words.length ? words.map((w, i) => `${i + 1}. ${w}`).join('\n') : "_No words added yet_")
+      );
+    }
+
+    // Reset warnings
+    if (option === "reset") {
+      global.antibadword[chatId].warnings = {};
+      return reply("🧹 All user warnings have been reset!");
+    }
+
+    // Default info
+    return reply(
+      `🧩 *AntiBadWord Settings*\n\n` +
+      `• Status: ${global.antibadword[chatId].enabled ? "✅ ON" : "❎ OFF"}\n` +
+      `• Words: ${global.antibadword[chatId].words.length}\n\n` +
+      `🧰 Usage:\n` +
+      `- .antibadword on/off\n` +
+      `- .antibadword add <word>\n` +
+      `- .antibadword remove <word>\n` +
+      `- .antibadword list\n` +
+      `- .antibadword reset`
+    );
+
+  } catch (err) {
+    console.error("AntiBadWord command error:", err);
+    reply("💥 Error while updating AntiBadWord settings.");
+  }
+  break;
+}
 case 'add': {
     if (!isGroup) return reply(" this command is only for groups");
     if (!isAdmin && !isBotAdmins && !isOwner) return reply("action restricted for admin and owner only");
@@ -778,7 +1269,6 @@ case 'hidetag': {
     break;
 }
 
-            // ================= TAGALL =================
 case 'tagall':
 case 'everyone':
     if (!isGroup) {
@@ -799,7 +1289,7 @@ case 'everyone':
     });
 break;
 
-            // ================= KICK =================
+
 case 'kick':
 case 'remove': {
     if (!isGroup) return reply("❌ This command can only be used in groups!");
@@ -853,7 +1343,6 @@ case 'remove': {
     break;
 }
 
-            // ================= PROMOTE =================
 case 'promote': {
     try {
         if (!m.isGroup) return m.reply("❌ This command only works in groups!");
@@ -902,7 +1391,7 @@ case 'promote': {
 }
 
 
-            // ================= DEMOTE =================
+
 case 'demote': {
     try {
         if (!m.isGroup) return reply("❌ This command only works in groups!");
@@ -951,7 +1440,6 @@ case 'demote': {
     break;
 }
 
-            // ================= COPILOT =================
 case 'copilot': {
     try {
         if (!args[0]) return reply('⚠️ Please provide a query!\n\nExample:\n.copilot what is JavaScript?');
@@ -973,8 +1461,8 @@ case 'copilot': {
     break;
 }
 
-            // ================= END OF CASES BRO=================
-            // ================= BASIC COMMANDS =================
+
+            // ================= OWNER ONLY COMMANDS =================
             default: {
                 if (!isOwner) break; // Only owner can use eval/exec
 

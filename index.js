@@ -124,6 +124,62 @@ async function starttrashcore() {
     }
   });
 
+trashcore.ev.on('messages.upsert', async chatUpdate => {
+        	if (config.STATUS_VIEW){
+          let  mek = chatUpdate.messages[0]
+            if (mek.key && mek.key.remoteJid === 'status@broadcast') {
+            	await trashcore.readMessages([mek.key]) }
+            }
+    })
+trashcore.ev.on('group-participants.update', async (update) => {
+    try {
+        const { id, participants, action } = update;
+        const chatId = id;
+        const botNumber = trashcore.user.id.split(":")[0] + "@s.whatsapp.net";
+
+        // Handle Promote
+        if (action === 'promote' && global.antipromote?.[chatId]?.enabled) {
+            const settings = global.antipromote[chatId];
+            for (const user of participants) {
+                if (user !== botNumber) {
+                    await trashcore.sendMessage(chatId, {
+                        text: `🚫 *Promotion Blocked!*\nUser: @${user.split('@')[0]}\nMode: ${settings.mode.toUpperCase()}`,
+                        mentions: [user]
+                    });
+
+                    if (settings.mode === "revert") {
+                        await trashcore.groupParticipantsUpdate(chatId, [user], "demote");
+                    } else if (settings.mode === "kick") {
+                        await trashcore.groupParticipantsUpdate(chatId, [user], "remove");
+                    }
+                }
+            }
+        }
+
+        // Handle Demote
+        if (action === 'demote' && global.antidemote?.[chatId]?.enabled) {
+            const settings = global.antidemote[chatId];
+            for (const user of participants) {
+                if (user !== botNumber) {
+                    await trashcore.sendMessage(chatId, {
+                        text: `🚫 *Demotion Blocked!*\nUser: @${user.split('@')[0]}\nMode: ${settings.mode.toUpperCase()}`,
+                        mentions: [user]
+                    });
+
+                    if (settings.mode === "revert") {
+                        await trashcore.groupParticipantsUpdate(chatId, [user], "promote");
+                    } else if (settings.mode === "kick") {
+                        await trashcore.groupParticipantsUpdate(chatId, [user], "remove");
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.error("AntiPromote/AntiDemote error:", err);
+    }
+});
+
+
   // ✅ Message handler
   trashcore.ev.on('messages.upsert', async ({ messages }) => {
     const msg = messages[0];
