@@ -1,4 +1,6 @@
 // antiDelete.js
+
+//Simply made to minor hack WhatsApp messages 👽 don't change this code bro use the way it is 😑
 const fs = require('fs');
 const path = require('path');
 const { downloadContentFromMessage } = require('@trashcore/baileys');
@@ -9,13 +11,11 @@ module.exports = function initAntiDelete(trashcore, opts = {}) {
   const STATE_PATH = path.join(LIB_DIR, 'antidelete_state.json');
   const MAX_CACHE = opts.maxCache || 500;
 
-  // Ensure folders exist
   fs.mkdirSync(LIB_DIR, { recursive: true });
 
-  // Default config
   const defaultEnabled = typeof opts.enabled === 'boolean' ? opts.enabled : true;
 
-  // Load persistent feature state
+
   let featureState = defaultEnabled;
   try {
     if (fs.existsSync(STATE_PATH)) {
@@ -34,7 +34,7 @@ module.exports = function initAntiDelete(trashcore, opts = {}) {
 
   const cache = new Map();
 
-  // Ensure database file exists
+
   if (!fs.existsSync(DB_PATH)) {
     fs.writeFileSync(DB_PATH, JSON.stringify({}, null, 2));
   }
