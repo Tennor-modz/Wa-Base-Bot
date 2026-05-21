@@ -1,266 +1,369 @@
-/*
-> Recode script give credits to›
-Giddy Tennor(Trashcore)
+// ============================================================
+//  ULTRA X PROJECT — by TrashX
+//  index.js  |  Stripped — menu, setprefix, mode only
+// ============================================================
 
-📝 | Created By Trashcore
-🖥️ | Base Ori By Trashcore 
-📌 |Credits Putrazy Xd
-📱 |Chat wa:254104245659
-👑 |Github: Tennor-modz 
-✉️ |Email: giddytennor@gmail.com
-*/
+const fs        = require('fs');
+const path      = require('path');
+const pino      = require('pino');
+const chalk     = require('chalk');
+const readline  = require('readline');
+const NodeCache = require('node-cache');
 
-const fs = require('fs');
-const pino = require('pino');
-const readline = require('readline');
-const path = require('path');
-const chalk = require('chalk');
-const { exec } = require('child_process');
 const {
   default: makeWASocket,
   useMultiFileAuthState,
-  makeCacheableSignalKeyStore,
   fetchLatestBaileysVersion,
-  makeInMemoryStore,
-  downloadContentFromMessage,
-  jidDecode
-} = require('@whiskeysockets/baileys');
-const handleCommand = require('./case');
-const config = require('./config');
+  makeCacheableSignalKeyStore,
+  DisconnectReason,
+  jidNormalizedUser
+} = require('@trashcore/baileys');
 
-// 🌈 Console helpers
-const log = {
-  info: (msg) => console.log(chalk.cyanBright(`[INFO] ${msg}`)),
-  success: (msg) => console.log(chalk.greenBright(`[SUCCESS] ${msg}`)),
-  error: (msg) => console.log(chalk.redBright(`[ERROR] ${msg}`)),
-  warn: (msg) => console.log(chalk.yellowBright(`[WARN] ${msg}`))
+const { loadPlugins, watchPlugins, plugins } = require('./pluginStore');
+const { initDatabase, getSetting, setSetting } = require('./database');
+const { logMessage }                           = require('./database/logger');
+const config                                   = require('./config');
+
+global.botStartTime = Date.now();
+let dbReady      = false;
+let trashcoreRef = null;
+
+// ─── console logger ──────────────────────────────────────────
+
+const C = {
+  arrow:     chalk.hex('#ff6ac1').bold,
+  dmBar:     chalk.hex('#00ffe0'),
+  dmHeader:  chalk.hex('#00ffe0').bold,
+  dmLabel:   chalk.hex('#a0a8c8'),
+  dmValue:   chalk.hex('#ffffff'),
+  dmName:    chalk.hex('#ffdd57').bold,
+  dmMsg:     chalk.hex('#ff9f43'),
+  gcBar:     chalk.hex('#bd93f9'),
+  gcHeader:  chalk.hex('#bd93f9').bold,
+  gcLabel:   chalk.hex('#a0a8c8'),
+  gcValue:   chalk.hex('#ffffff'),
+  gcName:    chalk.hex('#50fa7b').bold,
+  gcGroup:   chalk.hex('#ff79c6'),
+  gcMsg:     chalk.hex('#8be9fd'),
+  sysBar:    chalk.hex('#ffb86c'),
+  sysHeader: chalk.hex('#ffb86c').bold,
+  sysValue:  chalk.hex('#f1fa8c'),
+  errBar:    chalk.hex('#ff5555'),
+  errHeader: chalk.hex('#ff5555').bold,
+  errValue:  chalk.hex('#ff5555'),
+  okHeader:  chalk.hex('#50fa7b').bold,
+  okValue:   chalk.hex('#50fa7b'),
+  time:      chalk.hex('#6272a4'),
+  dim:       chalk.hex('#44475a'),
+  bold:      chalk.hex('#f8f8f2').bold,
 };
 
-// 🧠 Readline setup
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-function question(query) {
-  return new Promise(resolve => rl.question(query, ans => resolve(ans.trim())));
+function hbar(colorFn, char = '─', len = 48) {
+  return colorFn(char.repeat(len));
 }
 
-// 🚀 Start socket
+function logOk(msg)   { console.log(`${C.arrow('»')}  ${C.okHeader('[OK]')}   ${C.okValue(msg)}`); }
+function logSys(msg)  { console.log(`${C.arrow('»')}  ${C.sysHeader('[SYS]')}  ${C.sysValue(msg)}`); }
+function logWarn(msg) { console.log(`${C.arrow('»')}  ${C.sysHeader('[WARN]')} ${C.sysValue(msg)}`); }
+function logErr(msg)  { console.log(`${C.arrow('»')}  ${C.errHeader('[ERR]')}  ${C.errValue(msg)}`); }
+
+function logReconnect() {
+  console.log('');
+  console.log(hbar(C.sysBar, '─', 56));
+  console.log(`${C.arrow('»')}  ${C.sysHeader('Connection closed — reconnecting in 3s...')}`);
+  console.log(hbar(C.sysBar, '─', 56));
+  console.log('');
+}
+
+function logLoggedOut() {
+  console.log('');
+  console.log(hbar(C.errBar, '─', 56));
+  logErr('Logged out. Delete session folder and restart.');
+  console.log(hbar(C.errBar, '─', 56));
+  console.log('');
+}
+
+function printBanner() {
+  console.log('');
+  console.log(C.gcBar('  ╔' + '═'.repeat(52) + '╗'));
+  console.log(C.gcBar('  ║') + C.bold('        ⚡ TRASHCORE ULTRA  —  by TrashX        ') + C.gcBar('║'));
+  console.log(C.gcBar('  ╚' + '═'.repeat(52) + '╝'));
+  console.log('');
+}
+
+function printConnected(botNumber, pluginCount, prefix) {
+  const uptime = formatUptime(Date.now() - global.botStartTime);
+  const A = C.arrow('»');
+  console.log('');
+  console.log(hbar(C.dmBar, '═', 56));
+  console.log(`${A}  ${C.dmHeader('STATUS')}        ${chalk.hex('#50fa7b').bold('ONLINE ●')}`);
+  console.log(`${A}  ${C.dmLabel('Number:')}      ${chalk.hex('#ffdd57').bold('+' + botNumber)}`);
+  console.log(`${A}  ${C.dmLabel('Plugins:')}     ${chalk.hex('#50fa7b').bold(String(pluginCount))}`);
+  console.log(`${A}  ${C.dmLabel('Prefix:')}      ${chalk.hex('#ffb86c').bold(prefix)}`);
+  console.log(`${A}  ${C.dmLabel('Uptime:')}      ${C.time(uptime)}`);
+  console.log(hbar(C.dmBar, '═', 56));
+  console.log('');
+}
+
+// ─── caches ──────────────────────────────────────────────────
+
+const groupCache    = new NodeCache({ stdTTL: 120, checkperiod: 60 });
+const settingsCache = new NodeCache({ stdTTL: 30,  checkperiod: 15 });
+
+function getCachedSetting(key, defaultValue = null) {
+  const hit = settingsCache.get(key);
+  if (hit !== undefined) return hit;
+  const val = getSetting(key, defaultValue);
+  settingsCache.set(key, val);
+  return val;
+}
+
+const _origSetSetting = setSetting;
+function setCachedSetting(key, value) {
+  settingsCache.del(key);
+  return _origSetSetting(key, value);
+}
+global.setSetting = setCachedSetting;
+
+async function getGroupMeta(trashcore, chatId) {
+  const hit = groupCache.get(chatId);
+  if (hit) return hit;
+  try {
+    const meta = await trashcore.groupMetadata(chatId);
+    if (meta) groupCache.set(chatId, meta);
+    return meta || {};
+  } catch {
+    return {};
+  }
+}
+
+global.getGroupMeta = getGroupMeta;
+
+// ─── message queue ───────────────────────────────────────────
+
+const QUEUE_CONCURRENCY = 5;
+let   activeWorkers     = 0;
+const messageQueue      = [];
+
+function enqueueMessage(handler) {
+  messageQueue.push(handler);
+  drainQueue();
+}
+
+function drainQueue() {
+  while (activeWorkers < QUEUE_CONCURRENCY && messageQueue.length > 0) {
+    const handler = messageQueue.shift();
+    activeWorkers++;
+    handler().finally(() => {
+      activeWorkers--;
+      drainQueue();
+    });
+  }
+}
+
+// ─── helpers ─────────────────────────────────────────────────
+
+function formatUptime(ms) {
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return `${d}d ${h}h ${m}m ${s % 60}s`;
+}
+
+function normalizeNumber(jid) {
+  return jid ? jid.split('@')[0].split(':')[0] : '';
+}
+
+function cleanOldCache() {
+  const cacheFolder = path.join(__dirname, 'cache');
+  if (!fs.existsSync(cacheFolder)) return;
+  for (const file of fs.readdirSync(cacheFolder)) {
+    try { fs.unlinkSync(path.join(cacheFolder, file)); } catch {}
+  }
+}
+
+function question(query) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise(resolve => rl.question(query, ans => { rl.close(); resolve(ans.trim()); }));
+}
+
+function getHandleMessage() {
+  delete require.cache[require.resolve('./command')];
+  return require('./command');
+}
+
+// ─── session helpers ─────────────────────────────────────────
+
+const sessionDir = path.join(__dirname, 'session');
+const credsPath  = path.join(sessionDir, 'creds.json');
+
+async function saveSessionFromConfig() {
+  try {
+    if (!config.SESSION_ID || !config.SESSION_ID.includes('trashcore~')) return false;
+    const base64Data = config.SESSION_ID.split('trashcore~')[1];
+    if (!base64Data) return false;
+    await fs.promises.mkdir(sessionDir, { recursive: true });
+    await fs.promises.writeFile(credsPath, Buffer.from(base64Data, 'base64'));
+    logOk('Session saved from SESSION_ID');
+    return true;
+  } catch (err) {
+    logErr(`Failed to save session: ${err.message}`);
+    return false;
+  }
+}
+
+// ─── main bot ────────────────────────────────────────────────
+
 async function starttrashcore() {
-  const store = makeInMemoryStore({
-    logger: pino().child({ level: 'silent', stream: 'store' })
-  });
+  loadPlugins();
+  watchPlugins();
+  logOk(`Loaded ${plugins.size} plugins`);
 
   const { state, saveCreds } = await useMultiFileAuthState('./session');
-  const { version } = await fetchLatestBaileysVersion();
+  const { version }          = await fetchLatestBaileysVersion();
 
   const trashcore = makeWASocket({
     version,
-    keepAliveIntervalMs: 10000,
-    printQRInTerminal: false,
+    keepAliveIntervalMs: 30000,
+    printQRInTerminal:   false,
     logger: pino({ level: 'silent' }),
     auth: {
       creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' }).child({ level: 'silent' }))
+      keys:  makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' }))
     },
-    browser: ["Ubuntu", "Chrome", "20.0.00"]
+    browser:             ['Ubuntu', 'Chrome', '120.0.0.0'],
+    syncFullHistory:     false,
+    markOnlineOnConnect: false
   });
 
+  trashcoreRef = trashcore;
   trashcore.ev.on('creds.update', saveCreds);
 
-  // Pairing code
-  if (!trashcore.authState.creds.registered) {
-    const phoneNumber = await question(chalk.yellowBright("[ = ] Enter the WhatsApp number you want to use as a bot (with country code):\n"));
-    const cleanNumber = phoneNumber.replace(/[^0-9]/g, '');
-    console.clear();
+  // Store
+  const createToxxicStore = require('./basestore');
+  const store = createToxxicStore('./store', { maxMessagesPerChat: 50, memoryOnly: true });
+  store.bind(trashcore.ev);
 
-    const pairCode = await trashcore.requestPairingCode(cleanNumber);
-    log.info(`Enter this code on your phone to pair: ${chalk.green(pairCode)}`);
-    log.info("⏳ Wait a few seconds and approve the pairing on your phone...");
+  // Pairing
+  if (!state.creds.registered && (!config.SESSION_ID || config.SESSION_ID === '')) {
+    try {
+      const phoneNumber = await question(C.sysValue('[ = ] Enter your WhatsApp number (with country code):\n'));
+      const cleanNumber = phoneNumber.replace(/[^0-9]/g, '');
+      console.clear();
+      printBanner();
+      const pairCode = await trashcore.requestPairingCode(cleanNumber, 'TRASHBOT');
+      console.log('');
+      console.log(`${C.arrow('»')}  ${C.bold('Pairing Code:')}  ${chalk.hex('#ffdd57').bold(pairCode)}`);
+      console.log(`${C.arrow('»')}  ${C.time('Approve on your phone...')}`);
+      console.log('');
+    } catch (err) {
+      logErr(`Pairing failed: ${err.message}`);
+    }
   }
 
-  // Media download helper
-  trashcore.downloadMediaMessage = async (message) => {
-    let mime = (message.msg || message).mimetype || '';
-    let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
-    const stream = await downloadContentFromMessage(message, messageType);
-    let buffer = Buffer.from([]);
-    for await (const chunk of stream) {
-      buffer = Buffer.concat([buffer, chunk]);
-    }
-    return buffer;
-  };
-
-  // Connection handling
-  trashcore.ev.on('connection.update', ({ connection, lastDisconnect }) => {
+  // ─── connection.update ───────────────────────────────────
+  trashcore.ev.on('connection.update', async ({ connection, lastDisconnect }) => {
     if (connection === 'close') {
-      const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== 401;
-      log.error('Connection closed.');
-      if (shouldReconnect) starttrashcore();
-    } else if (connection === 'open') {
-      const botNumber = trashcore.user.id.split("@")[0];
-      log.success(`Bot connected as ${chalk.green(botNumber)}`);
-      rl.close();
-
-      // ✅ Send DM to owner
-      setTimeout(async () => {
-        const ownerJid = `${botNumber}@s.whatsapp.net`;
-        const message = `
-✅ *Bot Connected Successfully!*
-
-👑 *Creator:* Trashcore
-⚙️ *Version:* 3.0.0
-📦 *Type:* Base Script
-📱 *Paired Number:* ${botNumber}
-
-✨ Type *menu* to see commands!
-`;
-        try {
-          await trashcore.sendMessage(ownerJid, { text: message });
-          log.success(`Sent DM to paired number (${botNumber})`);
-        } catch (err) {
-          log.error(`Failed to send DM: ${err}`);
-        }
-      }, 2000);
-
-      trashcore.isPublic = true;
-    }
-  });
-
-trashcore.ev.on('messages.upsert', async chatUpdate => {
-        	if (config.STATUS_VIEW){
-          let  mek = chatUpdate.messages[0]
-            if (mek.key && mek.key.remoteJid === 'status@broadcast') {
-            	await trashcore.readMessages([mek.key]) }
-            }
-    })
-trashcore.ev.on('group-participants.update', async (update) => {
-    try {
-        const { id, participants, action } = update;
-        const chatId = id;
-        const botNumber = trashcore.user.id.split(":")[0] + "@s.whatsapp.net";
-
-        // Handle Promote
-        if (action === 'promote' && global.antipromote?.[chatId]?.enabled) {
-            const settings = global.antipromote[chatId];
-            for (const user of participants) {
-                if (user !== botNumber) {
-                    await trashcore.sendMessage(chatId, {
-                        text: `🚫 *Promotion Blocked!*\nUser: @${user.split('@')[0]}\nMode: ${settings.mode.toUpperCase()}`,
-                        mentions: [user]
-                    });
-
-                    if (settings.mode === "revert") {
-                        await trashcore.groupParticipantsUpdate(chatId, [user], "demote");
-                    } else if (settings.mode === "kick") {
-                        await trashcore.groupParticipantsUpdate(chatId, [user], "remove");
-                    }
-                }
-            }
-        }
-
-        // Handle Demote
-        if (action === 'demote' && global.antidemote?.[chatId]?.enabled) {
-            const settings = global.antidemote[chatId];
-            for (const user of participants) {
-                if (user !== botNumber) {
-                    await trashcore.sendMessage(chatId, {
-                        text: `🚫 *Demotion Blocked!*\nUser: @${user.split('@')[0]}\nMode: ${settings.mode.toUpperCase()}`,
-                        mentions: [user]
-                    });
-
-                    if (settings.mode === "revert") {
-                        await trashcore.groupParticipantsUpdate(chatId, [user], "promote");
-                    } else if (settings.mode === "kick") {
-                        await trashcore.groupParticipantsUpdate(chatId, [user], "remove");
-                    }
-                }
-            }
-        }
-    } catch (err) {
-        console.error("AntiPromote/AntiDemote error:", err);
-    }
-});
-
-
-  // ✅ Message handler
-  trashcore.ev.on('messages.upsert', async ({ messages }) => {
-    const msg = messages[0];
-    if (!msg.message || msg.key.remoteJid === 'status@broadcast') return;
-
-    const from = msg.key.remoteJid;
-    const sender = msg.key.participant || msg.key.remoteJid;
-    const isGroup = from.endsWith('@g.us');
-    const botNumber = trashcore.user.id.split(":")[0] + "@s.whatsapp.net";
-
-    // 🌐 Message type & body
-    let body =
-      msg.message.conversation ||
-      msg.message.extendedTextMessage?.text ||
-      msg.message.imageMessage?.caption ||
-      msg.message.videoMessage?.caption ||
-      msg.message.documentMessage?.caption ||
-      '';
-    body = (body || '').trim();
-    if (!body) return;
-
-    // 🧱 Wrap into m object
-    const m = {
-      ...msg,
-      chat: from,
-      sender,
-      isGroup,
-      body,
-      type: Object.keys(msg.message)[0],
-      quoted: msg.message?.extendedTextMessage?.contextInfo?.quotedMessage
-        ? {
-            key: {
-              remoteJid: msg.message.extendedTextMessage.contextInfo.remoteJid,
-              id: msg.message.extendedTextMessage.contextInfo.stanzaId,
-              participant: msg.message.extendedTextMessage.contextInfo.participant
-            },
-            message: msg.message.extendedTextMessage.contextInfo.quotedMessage
-          }
-        : null,
-      reply: (text) => trashcore.sendMessage(from, { text }, { quoted: msg })
-    };
-
-    // 🧩 Parse command
-    const args = body.split(/ +/);
-    const command = args.shift().toLowerCase();
-
-    // 🏘️ Group data
-    const groupMeta = isGroup ? await trashcore.groupMetadata(from).catch(() => null) : null;
-    const groupAdmins = groupMeta ? groupMeta.participants.filter(p => p.admin).map(p => p.id) : [];
-    const isBotAdmin = isGroup ? groupAdmins.includes(botNumber) : false;
-    const isAdmin = isGroup ? groupAdmins.includes(sender) : false;
-
-    // 🔥 Pass to handler
-    await handleCommand(trashcore, m, command, args, isGroup, isAdmin, groupAdmins, groupMeta, jidDecode, config);
-  });
-
-  // 🧩 Decode JID helper
-  trashcore.decodeJid = (jid) => {
-    if (!jid) return jid;
-    if (/:\d+@/gi.test(jid)) {
-      const decode = jidDecode(jid) || {};
-      return decode.user && decode.server ? `${decode.user}@${decode.server}` : jid;
-    }
-    return jid;
-  };
-
-  // 🔥 Hot reload
-  const watchFiles = ['./case.js', './config.js', './index.js'];
-  watchFiles.forEach(file => {
-    const absPath = path.resolve(file);
-    fs.watchFile(absPath, () => {
-      log.warn(`${file} updated! Reloading...`);
-      delete require.cache[require.resolve(absPath)];
-      try {
-        require(absPath);
-        log.success(`${file} reloaded successfully.`);
-      } catch (err) {
-        log.error(`Failed to reload ${file}: ${err}`);
+      const reason = lastDisconnect?.error?.output?.statusCode;
+      if (reason !== DisconnectReason.loggedOut) {
+        logReconnect();
+        setTimeout(() => starttrashcore(), 3000);
+      } else {
+        logLoggedOut();
       }
-    });
+    }
+
+    if (connection === 'open') {
+      const botNumber = normalizeNumber(trashcore.user.id);
+
+      await initDatabase();
+      dbReady = true;
+      cleanOldCache();
+
+      const prefix = getCachedSetting('prefix', '.');
+
+      printConnected(botNumber, plugins.size, prefix);
+
+      trashcore.sendMessage(`${botNumber}@s.whatsapp.net`, {
+        text:
+          `💠 *TRASHCORE ULTRA ACTIVATED!*\n\n` +
+          `> ❐ Prefix  : ${prefix}\n` +
+          `> ❐ Plugins : ${plugins.size}\n` +
+          `> ❐ Number  : wa.me/${botNumber}\n` +
+          `✓ Uptime: _${formatUptime(Date.now() - global.botStartTime)}_`
+      }).catch(() => {});
+
+      // AntiDelete
+      const initAntiDelete = require('./database/antiDelete');
+      initAntiDelete(trashcore, {
+        botNumber: `${botNumber}@s.whatsapp.net`,
+        dbPath:    './database/antidelete.json',
+        enabled:   true
+      });
+      logOk('AntiDelete active');
+    }
+  });
+
+  // ─── messages.upsert ─────────────────────────────────────
+  trashcore.ev.on('messages.upsert', ({ messages, type }) => {
+    if (type !== 'notify' || !dbReady) return;
+
+    for (const m of messages) {
+      if (!m?.message) continue;
+
+      enqueueMessage(async () => {
+        try {
+          // Status view
+          if (m.key.remoteJid === 'status@broadcast') {
+            const enabled = getCachedSetting('statusView', true);
+            if (enabled) trashcore.readMessages([m.key]).catch(() => {});
+            return;
+          }
+
+          // Unwrap ephemeral
+          if (m.message?.ephemeralMessage) m.message = m.message.ephemeralMessage.message;
+
+          // Log + dispatch
+          await logMessage(m, trashcore);
+          await getHandleMessage()(trashcore, m);
+
+        } catch (err) {
+          logErr(`[messages.upsert] ${err.message}`);
+        }
+      });
+    }
   });
 }
 
-starttrashcore();
+// ─── entry point ─────────────────────────────────────────────
+
+async function sessionID() {
+  printBanner();
+  try {
+    await fs.promises.mkdir(sessionDir, { recursive: true });
+
+    if (fs.existsSync(credsPath)) {
+      logOk('Existing session found. Starting...');
+      await starttrashcore();
+      return;
+    }
+
+    if (config.SESSION_ID && config.SESSION_ID.includes('trashcore~')) {
+      const ok = await saveSessionFromConfig();
+      if (ok) {
+        logOk('SESSION_ID loaded. Starting...');
+        await starttrashcore();
+        return;
+      }
+      logWarn('SESSION_ID failed. Falling back to pairing...');
+    }
+
+    logWarn('No session found. Starting pairing flow...');
+    await starttrashcore();
+  } catch (error) {
+    logErr(`Startup error: ${error.message}`);
+  }
+}
+
+sessionID();
