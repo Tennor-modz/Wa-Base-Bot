@@ -5,7 +5,7 @@
 
 
 <p align="center">
-This base  is a automated whatsapp bot base developed by <a href="https://github.com/Tennor-modz" target="_blank">Giddy Tennor</a> using <a href="https://github.com/adiwajshing/Baileys" target="_blank">Baileys</a> and <a href="https://github.com/nodejs" target="_blank">Nodejs</a>. Dont forget to give a star bro.
+This base  is a automated whatsapp bot base developed by <a href="https://github.com/Tennor-modz" target="_blank">Giddy Tennor</a> using <a href="https://github.com/Tennor-modz/MD-Baileys" target="_blank">@trashcore/Baileys</a> and <a href="https://github.com/nodejs" target="_blank">Nodejs</a>. Dont forget to give a star bro.
 </p>
 
 
