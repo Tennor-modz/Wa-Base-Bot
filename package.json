@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@trashcore/baileys": "latest",
+    "axios": "^1.7.9",
     "chalk": "^4.1.2",
     "pino": "^8.17.0",
     "better-sqlite3": "latest",
